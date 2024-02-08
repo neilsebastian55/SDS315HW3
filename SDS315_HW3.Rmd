@@ -29,21 +29,20 @@ Creatinine = read.csv("creatinine.csv")
 ### **Part A**
 ##### **What creatinine clearance rate should we expect for a 55-year-old? Explain briefly (one or two sentences + equations) how you determined this.**
 
-```{r, echo = FALSE, error=FALSE}
+```{r, echo = FALSE, message = FALSE}
 ModelCreat = summary(lm(creatclear ~ age, data = Creatinine))
 ModelCreat = coef(ModelCreat)[,1]
 ```
-Using lm to create a linear regression model we can analyze the Creatine Clearance Rate or CCR by age. Using what we found, the intercept and coeffecient, we can create the line of best fit equation which is y = 147.8 - .62x, where x is age and y is the expected CCR. The projected CCR for someone that is 55 years of age is `r round(147.8 - .62*(55))` mL/min.
+I used the lm function to create a linear regression model that helped analyze the creatinine clearance rate (CCR)by age. Using this model I found the intercept and coeffecient, which can be used to create the line of best fit which has an equation of y = 147.8 - .62x. In this equation x is age and y is the expected CCR. The projected CCR for someone that is 55 years old is about `r round(147.8 - .62*(55))` mL/min.
 
 ### **Part B**
 ##### **How does creatinine clearance rate ch ange with age? (This should be a single number whose units are ml/minute per year.) Explain briefly (one or two sentences) how you determined this.**
-
-Based on the equation mentioned found in part A, the slope of the equation is equal to the change of CCR as the age of the patient increases. This number is approximately -.62 mL/min per year.
+Using the equation I found in part A, the slope is equal to the change of CCR over the age of the patient. This number is our mx of the mx + b which in this case is actually -.62 mL/min per year.
 
 ### **Part C**
 ##### **Whose creatinine clearance rate is healthier (higher) for their age: a 40-year-old with a rate of 135, or a 60-year-old with a rate of 112? Explain briefly (a few sentences + equations) how you determined this.**
 
-To compare the creatinine clearance rate based on health for 2 different aged individuals we have to compare the residual amount when analyzing their actual and exected CCR rate. First, the 40-year-old with a rate of 135 is expected to have a CCR of `r 147.8-.62*(40)`, meaning their CCR is healthier by 12 mL/min for their age. Next, the 60-year-old is expected to have a rate of `r 147.8-.62*(60)`, meaning they are healthier than their expected CCR by 1.4 mL/min. Since the 40-year-old is healthier than their expected CCR by a greater margin than the 60-year-old (12>1) they have the healthier CCR.
+To find which individual has a healthier creatinine clearance rate we can plug both of their ages into our regression formula to find both of their expected rates, then compare their provided actual rates. Starting with the 40 year old who has an expected rate of `r (147.8 - .62*(40))`, but an actual rate of 135. Next the 60 year old is expected to have a `r (147.8 - .62*(60))` creatinine clearance rate but actually has an 112 rate. Since the difference between actual and expected for the 40 year old is +12mL/min and for the 60 it is +1.4mL/min we can conclude that the 40 year old is healthier than the 60 year old in terms of creatinine.
 
 ## **Problem Two**
 ``` {r echo = FALSE, message = FALSE}
@@ -151,12 +150,12 @@ The graph above shows the trend of daily deaths as the days increase after the d
 ### **Question**
 ##### **The economists’ power-law model is Q = KP^β , where P is price, Q is quantity demanded by consumers at that price, where β is the price elasticity of demand. In light of the data, what is the estimated price elasticity of demand for milk?**
 
-``` {r echo=FALSE, message=FALSE}
+``` {r echo=FALSE, message=FALSE, error = FALSE}
 Milk=read_csv('milk.csv')
 Milk=arrange(Milk, price)
 ```
 
-``` {r echo=FALSE, message = FALSE}
+``` {r echo=FALSE, message = FALSE, error = FALSE}
 MilkModel = summary(lm(log(sales)~log(price), Milk))
 MilkModel = coef(MilkModel)[,1]
 MilkModel = tidy(MilkModel)
