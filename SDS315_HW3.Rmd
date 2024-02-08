@@ -1,5 +1,5 @@
 ---
-title: "SDS315_HW2.rmd"
+title: "SDS315_HW3.rmd"
 author: "Neil Sebastian"
 date: "2024-02-06"
 output:
@@ -16,9 +16,9 @@ library(mosaic)
 library(broom)
 library(kableExtra)
 ```
-# **HW2**
+# **HW3**
 ### **UT EID: ns36965**
-### **[GitHub Link](https://github.com/neilsebastian55/SDS315HW2)**
+### **[GitHub Link](https://github.com/neilsebastian55/SDS315HW3)**
 
 ## **Problem One**
 
