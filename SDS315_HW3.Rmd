@@ -1,0 +1,177 @@
+---
+title: "SDS315_HW2.rmd"
+author: "Neil Sebastian"
+date: "2024-02-06"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(mosaic)
+library(broom)
+library(kableExtra)
+```
+# **HW2**
+### **UT EID: ns36965**
+### **[GitHub Link](https://github.com/neilsebastian55/SDS315HW2)**
+
+## **Problem One**
+
+```{r, echo = FALSE, message = FALSE}
+Creatinine = read.csv("creatinine.csv")
+```
+
+### **Part A**
+##### **What creatinine clearance rate should we expect for a 55-year-old? Explain briefly (one or two sentences + equations) how you determined this.**
+
+```{r, echo = FALSE, error=FALSE}
+ModelCreat = summary(lm(creatclear ~ age, data = Creatinine))
+ModelCreat = coef(ModelCreat)[,1]
+```
+Using lm to create a linear regression model we can analyze the Creatine Clearance Rate or CCR by age. Using what we found, the intercept and coeffecient, we can create the line of best fit equation which is y = 147.8 - .62x, where x is age and y is the expected CCR. The projected CCR for someone that is 55 years of age is `r round(147.8 - .62*(55))` mL/min.
+
+### **Part B**
+##### **How does creatinine clearance rate ch ange with age? (This should be a single number whose units are ml/minute per year.) Explain briefly (one or two sentences) how you determined this.**
+
+Based on the equation mentioned found in part A, the slope of the equation is equal to the change of CCR as the age of the patient increases. This number is approximately -.62 mL/min per year.
+
+### **Part C**
+##### **Whose creatinine clearance rate is healthier (higher) for their age: a 40-year-old with a rate of 135, or a 60-year-old with a rate of 112? Explain briefly (a few sentences + equations) how you determined this.**
+
+To compare the creatinine clearance rate based on health for 2 different aged individuals we have to compare the residual amount when analyzing their actual and exected CCR rate. First, the 40-year-old with a rate of 135 is expected to have a CCR of `r 147.8-.62*(40)`, meaning their CCR is healthier by 12 mL/min for their age. Next, the 60-year-old is expected to have a rate of `r 147.8-.62*(60)`, meaning they are healthier than their expected CCR by 1.4 mL/min. Since the 40-year-old is healthier than their expected CCR by a greater margin than the 60-year-old (12>1) they have the healthier CCR.
+
+## **Problem Two**
+``` {r echo = FALSE, message = FALSE}
+market_model = read_csv('marketmodel.csv')
+```
+
+### **Part A**
+##### **A short introduction, in your own words, on what the “beta” of a stock is measuring and how it is calculated.**
+For this problem, we used data from six stocks (excluding the S&P 500, which acts as a market reference). We calculated beta, alpha, and R^2 values for each of these six stocks. To undestand the data yo uneed to know what beta and alpha values are.
+
+'Beta' for a stock is the percentage change in its return when the overall market changes by 1%. If a stock has a beta of 1, it changes by 1% when the market changes by 1%. A higher beta means the stock changes more than the market, and a lower beta means it changes less. Some stocks even have negative betas, changing in the opposite direction of the market. Negative betas sound like a bad thing but they act like 'insurance' during market crashes, benefiting beta stocks when the market crashes.
+
+Beta measures a stock's systematic risk, reflecting its risk compared to the broader market. This is different from unsystematic risk, which can be spread out. Although the table below doesn't cover the entire stock market, we use the SPY ticker for the S&P 500 as a stand-in. It helps us understand market conditions due to its size and correlation with the overall market.
+
+### **Part B**
+##### **Regress the returns for each of the 6 stocks individually on the return of S&P 500. Make a clean, professional looking table that shows the ticker symbol, intercept, slope, and R2 for each of the 6 regressions.**
+
+``` {r echo=FALSE}
+
+tickers <- c("AAPL", "GOOG", "MRK", "JNJ", "WMT", "TGT")
+
+StockModels = lapply(tickers, function(ticker) {
+  regress_formula = as.formula(paste(ticker, "~ SPY"))
+  lm(regress_formula, data = market_model)
+})
+MarketResults = bind_rows(
+  lapply(seq_along(StockModels), function(i) {
+    TidyFin = tidy(StockModels[[i]])
+    TidyFin$Stock = tickers[i]
+    select(TidyFin, Stock, term)
+  })
+)
+SlopeIntercept = data.frame(
+  Stock = tickers,
+  Intercept = sapply(StockModels, function(model) coef(model)[1]),
+  Slope = sapply(StockModels, function(model) coef(model)[2]),
+  R_squared = sapply(StockModels, function(model) summary(model)$r.squared)
+)
+
+MarketResults = merge(MarketResults, SlopeIntercept, by = "Stock")
+MarketResults = filter(MarketResults, term=="(Intercept)")
+MarketResults = select(MarketResults, -term)
+
+MarketResults %>%
+  kable(col.names=c("Ticker","Intercept","Slope"," R^2")) %>%
+  kable_styling(full_width = TRUE, bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+```
+
+The provided table examines the Alpha (β0), Beta (β1), and R^2 metrics for six individual stocks in relation to the S&P 500 between Jan 2019 and Sept 2020. The values represent the percentage change of each stock corresponding to S&P 500 moves. A higher Beta showsa stock tends to grow more in sync with the S&P 500, while a lower shows a stock tends to fall. The R^2 value shows the extent of predictable variation for a stock on a scale of 0 to 1, where the closer to 0 means more  variation in y, and closer to 1 is  more systemic variation in y.
+
+### **Part C**
+
+##### **A conclusion that answers two questions: in light of your analysis, which of these six stocks has the lowest systematic risk? And which has the highest systematic risk?**
+The stock with the lowest systematic risk is Walmart (WMT) due to it having the smallest Beta value. The stock with the highest systematic risk is Apple (AAPL), which funnily enough I now own, because it has the highest Beta value.
+
+## **Problem Three**
+``` {r echo=FALSE, message=FALSE}
+Covid = read_csv('covid.csv')
+```
+
+### **Part A**
+##### **An estimated growth rate and doubling time for Italy**
+``` {r echo=FALSE}
+
+ItalyData = Covid[Covid$country == "Italy", ]
+ItalyModel = summary(lm(log(deaths) ~ days_since_first_death, data = ItalyData))
+
+ItalyRate = ItalyModel$coefficients["days_since_first_death", "Estimate"]
+ItalyRate = round(exp(ItalyRate),3)
+
+ItalyDoubleRate = round(70/(ItalyRate*100))
+
+```
+
+The growth rate of COVID in Italy from February 2020 to April 2020 is about `r ItalyRate` and the doubling occurs on day `r ItalyDoubleRate`.
+
+### **Part B**
+##### **An estimated growth rate and doubling time for Spain.**
+
+``` {r echo=FALSE}
+
+SpainData = Covid[Covid$country == "Spain", ]
+SpainModel = summary(lm(log(deaths) ~ days_since_first_death, data = SpainData))
+
+SpainRate = SpainModel$coefficients["days_since_first_death", "Estimate"]
+SpainRate = round(exp(SpainRate),3)
+
+SpainDoubleRate = round(70/(SpainRate*100))
+
+```
+
+The growth rate of COVID in Spain from March 2020 to April 2020 is approximately `r SpainRate` and the doubling occurs on day `r SpainDoubleRate`.
+
+### **Part C**
+##### **A line graph showing reported daily deaths over time (using days_since_first_death, rather than calendar date, as the relevant time variable) in each country. Your line graph should have two lines, one for each country, distinguished by their color.**
+
+``` {r echo=FALSE}
+ggplot(Covid) + geom_line(aes(x=days_since_first_death, y=deaths, color=country), linewidth=1.25) + scale_color_manual(values=c("Italy"="skyblue", "Spain"="lightpink"))+labs(title="Deaths Since First Death in Italy in Spain Daily", x="Days Since First Death", y="Deaths Daily")
+```
+
+The graph above shows the trend of daily deaths as the days increase after the day of the first death due to covid.
+
+## **Problem Four**
+### **Question**
+##### **The economists’ power-law model is Q = KP^β , where P is price, Q is quantity demanded by consumers at that price, where β is the price elasticity of demand. In light of the data, what is the estimated price elasticity of demand for milk?**
+
+``` {r echo=FALSE, message=FALSE}
+Milk=read_csv('milk.csv')
+Milk=arrange(Milk, price)
+```
+
+``` {r echo=FALSE, message = FALSE}
+MilkModel = summary(lm(log(sales)~log(price), Milk))
+MilkModel = coef(MilkModel)[,1]
+MilkModel = tidy(MilkModel)
+MilkTable = MilkModel %>%
+  kable(col.names=c("Term","Estimate")) %>%
+  kable_styling(full_width = TRUE, bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+
+MilkTable
+```
+
+Using a power-law regression model to display the change in milk demand with price changes we can find the estimated price elasticity of demand for milk. The data in the table shows that the elasticiity is about -1.62. This means that for every 1% price change in milk there is about a NEGATIVE 1.62% change in demand. So for example if the price of milk goes up by 100%, lets say from 3 dollars to 6 dollars, the demand for milk would go down about 162%. This establishes a negative correlation/relationship between price and demand for milk.
+
+
+
+
+
+
+
